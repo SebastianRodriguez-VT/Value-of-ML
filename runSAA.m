@@ -7,16 +7,18 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter = 200;
+max_iter = 600;
 
-
+avg_iters = 10;
 
 
 % Store main values
-% col 1 = case, col 2 = H, col 3 = R, col 4 = ML, col 5 = SAA,          
-% col 6 = optimal
+% col 1 = case, col 2 = H, col 3 = R, col 4 = ML, col 5 = SAA, col 6 = optimal
 storeResults = zeros(max_iter,6);
 
+% Store Averaged Values
+% col 1 = case, col 2 = H, col 3 = R, col 4 = ML, col 5 = SAA, col 6 = optimal
+storeAvgResults = zeros(max_iter,6);
 
 
 
@@ -50,8 +52,20 @@ sigma = 0.00;
 for index = 1:max_iter
     
     tMat    = zeros(tStates);
-
-
+    
+    running_SAA_collisions = 0;
+    running_ML_collisions =  0; 
+    running_SAA_MO =         0;
+    running_ML_MO =          0;
+    running_optimal_collision = 0;
+    running_optimal_reward = 0;
+    running_ML_reward =      0;
+    running_SAA_reward =     0;
+    
+    
+    for iters = 1:avg_iters
+    
+    % make TMat
     for i = 1:tStates
         
          probabilities = [0;0;0];
@@ -139,13 +153,15 @@ for index = 1:max_iter
     missedOpp(index,5)     = storeResults(index,2);
     Intf_rolling(index,11) = storeResults(index,2);
     
+    workingHvalue = storeResults(index,2);
+    
     % store r value
     storeResults(index,3)   = ComputeDiagonal(tMat);
     missedOpp(index,2)      = storeResults(index,3); 
     Intf_rolling(index,10)  = storeResults(index,3);
     numSubsSelected(index,2)= storeResults(index,3);
     
-    
+    workingRvalue = storeResults(index,3);
     
     
     % generate states
@@ -163,6 +179,7 @@ for index = 1:max_iter
 
     % Choose a random starting subband position
     % observe that random starting position compared to states(1,:)
+    rewardOptimal = 0;
     for running = 2:n 
 
         % Look at previous interferer, find what row it represents
@@ -188,7 +205,10 @@ for index = 1:max_iter
         % collisions
         stack = actual_intf + decision;
         Optimal_collision = sum(stack>1);
-
+        
+        [reward,notneeded] = CalculateReward(decision, actual_intf, dim);
+        rewardOptimal = rewardOptimal + reward;
+        
         % The Issue I'm facing here is that optimal missed opportunities is
         % a difficult problem to code. It'll take me mapping several
         % solutions to the possible optimal one. 
@@ -205,9 +225,10 @@ for index = 1:max_iter
         optimal_results(running,2) = Optimal_collision;
         optimal_results(running,1) = running;
     end
-
+    
+    rewardOptimal = rewardOptimal/n;
     storeResults(index,6) = sum(optimal_results(:,2)) / n;
-
+    AvgCollisionsOptimal = storeResults(index,6);
 
 
     
@@ -220,10 +241,10 @@ for index = 1:max_iter
     nSB     = 5;         % Number of sub-bands   
 
 
-    states = MakeStates(tMat, nSB, valuesIntf);
+    %states = MakeStates(tMat, nSB, valuesIntf);
 
     % Run TS
-    [t_CPI,tCols,missedO,SubsSelected] = thompsonSamp(nSB,tPulses,states);    
+    [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,tPulses,states);    
     % Calculate Average collisions
     AvgCollisionsML = sum(tCols)/length(tCols);
     % store Collisions ML
@@ -254,6 +275,7 @@ for index = 1:max_iter
     collision(1) = sum(states(1,:));
     
     missedSAA = zeros(n,1);
+    rewardingSAA = 0;
     for k = 2:n
         optimal = [0,0,0,0,0];
         
@@ -268,8 +290,11 @@ for index = 1:max_iter
         stack = states(k,:)+action(k,:);
         collision(k) = sum(stack>1);
         
+        [rewardSAA,notNeeded] = CalculateReward(action(k,:),states(k,:),dim);
+        rewardingSAA = rewardingSAA + rewardSAA;
         
         
+        % Missed opportunities SAA calculation
         contigOpen2 = states(k,:);
         contigOpen2 = not(contigOpen2);
         f = find(diff([false,contigOpen2==1,false])~=0);
@@ -289,7 +314,7 @@ for index = 1:max_iter
         end
         
     end
-    
+    rewardingSAA = rewardingSAA/n;
     
     % store average number of subbands selected 
     numSubsSelected(index,4) = sum(action, 'all')/length(action);
@@ -304,6 +329,39 @@ for index = 1:max_iter
     Intf_rolling(index,9)   = sum(collision((3 * length(collision)/4) + 1: length(collision)))/(n/4);
     % Collisions SAA
     storeResults(index,5) = sum(collision)/n;
+    AvgCollisionsSAA = storeResults(index,5);
+    
+    
+    
+    running_SAA_collisions = running_SAA_collisions + AvgCollisionsSAA;
+    running_ML_collisions =  running_ML_collisions + AvgCollisionsML; 
+    running_optimal_collisions = running_optimal_collision + AvgCollisionsOptimal;
+    %running_SAA_MO = running_SAA_MO + ;
+    %running_ML_MO = running_ML_MO + ;
+    % implement this now
+    running_optimal_reward = running_optimal_reward + rewardOptimal;
+    running_ML_reward  = running_ML_reward  + allMLreward;
+    running_SAA_reward = running_SAA_reward + rewardingSAA;
+    running_R_avg      = running_R_avg + workingRvalue;
+    running_H_avg      = running_H_avg + workingHvalue;
+    
+    
+    storeAvgResults(index,1) = index;
+    end
+    % Store Averaged Values
+    % col 1 = case, col 2 = H, col 3 = R, col 4 = SAA_COLL, col 5 =
+    % ML_COLL, col 6 = optimal_COLL, col 7 = SAA_reward, col 8 = ML_reward,
+    % col 9 =  
+    % storeAvgResults = zeros(max_iter,6);
+    storeAvgResults(index,2) = running_H_avg/avg_iters;
+    storeAvgResults(index,3) = running_R_avg/avg_iters;
+    storeAvgResults(index,4) = running_SAA_collisions/avg_iters;
+    storeAvgResults(index,5) = running_ML_collisions/avg_iters;
+    storeAvgResults(index,6) = running_optimal_collisions/avg_iters;
+    storeAvgResults(index,7) = running_SAA_reward/avg_iters;
+    storeAvgResults(index,8) = running_ML_reward/avg_iters;
+    storeAvgResults(index,9) = running_optimal_reward/avg_iters;
+    
     
     
     % increment sigma for our norm dist.
