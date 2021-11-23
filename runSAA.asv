@@ -9,7 +9,11 @@
 % R will always starts at 1 now
 max_iter = 600;
 
-avg_iters = 10;
+avg_iters = 4;
+
+% currently, I had this set to 10 and in 8 hours it ran 56 steps.
+% changing it to 40 should run the whole 600 with 4 averages within
+
 
 
 % Store main values
@@ -59,8 +63,11 @@ for index = 1:max_iter
     running_ML_MO =          0;
     running_optimal_collision = 0;
     running_optimal_reward = 0;
-    running_ML_reward =      0;
+    running_ML_reward  =     0;
     running_SAA_reward =     0;
+    running_R_avg      =     0;
+    running_H_avg      =     0;
+    
     
     
     for iters = 1:avg_iters
@@ -374,19 +381,51 @@ average_sorted_H = sortrows(storeAvgResults,2);
 average_sorted_R = sortrows(storeAvgResults,3);
 
 % Plot them up
-%R
+%R Collisions
 figure % fig 1 
 plot(average_sorted_R(:,3),average_sorted_R(:,4), 'LineWidth', 1)
 hold on
 plot(average_sorted_R(:,3),average_sorted_R(:,5), 'LineWidth', 1)
 hold on
 plot(average_sorted_R(:,3),average_sorted_R(:,6), 'LineWidth', 1)
-
 title('R-Value vs Collisions ML vs SAA')
 xlabel('R') 
 ylabel('Avg. Collisions') 
-legend({'SAA', 'ML','Optimal', 'SAA50%'},'Location','southeast')
+legend({'SAA', 'ML','Optimal'},'Location','northeast')
+%H Collisions
+figure % fig 1 
+plot(average_sorted_H(:,2),average_sorted_R(:,4), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,5), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,6), 'LineWidth', 1)
+title('H-Value vs Collisions ML vs SAA')
+xlabel('H') 
+ylabel('Avg. Collisions') 
+legend({'SAA', 'ML','Optimal'},'Location','southeast')
 
+%R Reward
+figure % fig 1 
+plot(average_sorted_R(:,3),average_sorted_R(:,7), 'LineWidth', 1)
+hold on
+plot(average_sorted_R(:,3),average_sorted_R(:,8), 'LineWidth', 1)
+hold on
+plot(average_sorted_R(:,3),average_sorted_R(:,9), 'LineWidth', 1)
+title('R-Value vs Reward ML vs SAA')
+xlabel('R') 
+ylabel('Avg. Reward') 
+legend({'SAA', 'ML','Optimal'},'Location','northeast')
+%H Reward
+figure % fig 1 
+plot(average_sorted_H(:,2),average_sorted_R(:,7), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,8), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,9), 'LineWidth', 1)
+title('H-Value vs Reward ML vs SAA')
+xlabel('H') 
+ylabel('Avg. Reward') 
+legend({'SAA', 'ML','Optimal'},'Location','southeast')
 
 
 

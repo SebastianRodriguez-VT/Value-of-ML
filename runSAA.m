@@ -9,7 +9,16 @@
 % R will always starts at 1 now
 max_iter = 600;
 
-avg_iters = 10;
+
+
+
+avg_iters = 4;
+
+% currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
+% continues linearly then it should take 96 hours to run the whole sim. 
+% Changing avg_iters = 4 should run the whole 600 (assuming runtime is linear) 
+% within 34 hours. Much more reasonable
+
 
 
 % Store main values
@@ -59,8 +68,11 @@ for index = 1:max_iter
     running_ML_MO =          0;
     running_optimal_collision = 0;
     running_optimal_reward = 0;
-    running_ML_reward =      0;
+    running_ML_reward  =     0;
     running_SAA_reward =     0;
+    running_R_avg      =     0;
+    running_H_avg      =     0;
+    
     
     
     for iters = 1:avg_iters
