@@ -37,8 +37,8 @@ if NumCols > 0
     Reward = 0;
 else
     if BWdist > 0
-        Reward = 1-(.1*BWdist);
-        %Reward  = 5/(6*BWdist);
+        %Reward = 1-(.1*BWdist);
+        Reward  = 5/(6*BWdist);
         
 
     else
