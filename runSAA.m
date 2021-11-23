@@ -18,7 +18,7 @@ storeResults = zeros(max_iter,6);
 
 % Store Averaged Values
 % col 1 = case, col 2 = H, col 3 = R, col 4 = ML, col 5 = SAA, col 6 = optimal
-storeAvgResults = zeros(max_iter,6);
+storeAvgResults = zeros(max_iter,9);
 
 
 
@@ -369,8 +369,56 @@ for index = 1:max_iter
 end
 
 
+% Sort rewards, average collisions long term runs, plot
+average_sorted_H = sortrows(storeAvgResults,2);
+average_sorted_R = sortrows(storeAvgResults,3);
 
+% Plot them up
+%R Collisions
+figure % fig 1 
+plot(average_sorted_R(:,3),average_sorted_R(:,4), 'LineWidth', 1)
+hold on
+plot(average_sorted_R(:,3),average_sorted_R(:,5), 'LineWidth', 1)
+hold on
+plot(average_sorted_R(:,3),average_sorted_R(:,6), 'LineWidth', 1)
+title('R-Value vs Collisions ML vs SAA')
+xlabel('R') 
+ylabel('Avg. Collisions') 
+legend({'SAA', 'ML','Optimal'},'Location','northeast')
+%H Collisions
+figure % fig 1 
+plot(average_sorted_H(:,2),average_sorted_R(:,4), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,5), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,6), 'LineWidth', 1)
+title('H-Value vs Collisions ML vs SAA')
+xlabel('H') 
+ylabel('Avg. Collisions') 
+legend({'SAA', 'ML','Optimal'},'Location','southeast')
 
+%R Reward
+figure % fig 1 
+plot(average_sorted_R(:,3),average_sorted_R(:,7), 'LineWidth', 1)
+hold on
+plot(average_sorted_R(:,3),average_sorted_R(:,8), 'LineWidth', 1)
+hold on
+plot(average_sorted_R(:,3),average_sorted_R(:,9), 'LineWidth', 1)
+title('R-Value vs Reward ML vs SAA')
+xlabel('R') 
+ylabel('Avg. Reward') 
+legend({'SAA', 'ML','Optimal'},'Location','northeast')
+%H Reward
+figure % fig 1 
+plot(average_sorted_H(:,2),average_sorted_R(:,7), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,8), 'LineWidth', 1)
+hold on
+plot(average_sorted_H(:,2),average_sorted_R(:,9), 'LineWidth', 1)
+title('H-Value vs Reward ML vs SAA')
+xlabel('H') 
+ylabel('Avg. Reward') 
+legend({'SAA', 'ML','Optimal'},'Location','southeast')
 
 
 
