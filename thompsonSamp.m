@@ -3,8 +3,9 @@
  % Charlie Thornton July 2020
  %%
 
-function [act,collision,missedO,numSubsSelected] = thompsonSamp(bands,n,intf)
+function [act,collision,missedO,numSubsSelected, allReward] = thompsonSamp(bands,n,intf)
 
+allReward = 0;
 k = ((bands)*(bands+1))/2; %arms
 S = 2^(bands);
 ActionsList = SelectOnlyContiguousBands(de2bi([1:2^(bands)-1], bands, 'left-msb')); 
@@ -95,7 +96,7 @@ for t = 1:n
     act(t,:) = fullAct;
        
     [reward(t),collision(t)] = CalculateReward(fullAct,state,bands);
-       
+    allReward = allReward + reward(t);   
 %     
     % full act is the decision being made
     optimal = [0,0,0,0,0];
@@ -135,7 +136,7 @@ for t = 1:n
      end
         
 end
-
+allReward =  allReward/n;
 % steps = 1:n;
 % plot(loss./steps)
 % xlabel('PRI $\#$')
