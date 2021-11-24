@@ -3,6 +3,16 @@
 % Sebastian Rodriguez, drsebastian@vt.edu, Fall 2021
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% TODO:
+%   Fix the optimal collisions, it's not averaging properly.
+%   Add optimal to the average subband selection, this may show something
+%   Create a first run of the R,H -> MDP code
+%   Tell my girlfriend I love her
+
+
+
+
+
 % Change this to increase the number of runs of TS and SAA we do
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
