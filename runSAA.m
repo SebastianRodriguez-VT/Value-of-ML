@@ -4,7 +4,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% TODO:
-%   Fix the optimal collisions, it's not averaging properly.
+%   Fix the optimal collisions, it's definitely not averaging properly.
 %   Add optimal to the average subband selection, this may show something
 %   Create a first run of the R,H -> MDP code
 %   Tell my girlfriend I love her
@@ -67,7 +67,7 @@ for i = 0: (tStates-1)
 end
 
 
-sigma = 0.00;
+sigma = 8.00;
 for index = 1:max_iter
     
     tMat    = zeros(tStates);
