@@ -1,11 +1,11 @@
-function [average_collisions, numSubsSelected] = RunOptimalDecisions(tMat, states, n, valuesIntf, optimal_decisions)
+function [average_collisions, numSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions)
 %% Testing Optimal Decision Code
 % add optimal decision making here
     
     % Choose a random starting subband position
     % observe that random starting position compared to states(1,:)
     %% add optimal decision making here
-    optimal_results = zeros(n,3);
+    optimal_results = zeros(n,4);
 %     action_mistakes = zeros(n,10);
 
     % Choose a random starting subband position
@@ -21,7 +21,11 @@ function [average_collisions, numSubsSelected] = RunOptimalDecisions(tMat, state
         % Find the highest number (probability) and its index in that row
         % This represents the highest likelihood that the interferer will
         % occur in the next time step
-        [max_prob, index_prob] = max(tMat(previous_intf,:));
+%%%%%%%%[max_prob, index_prob] = max(tMat(previous_intf,:));
+        
+        [reward_opt, index_prob] = max(weightedOptimalMat(previous_intf,:));
+
+        
         
         % Choose that predicted interferer as defined by that index
         predicted_interferer = valuesIntf(index_prob,:);
@@ -61,11 +65,13 @@ function [average_collisions, numSubsSelected] = RunOptimalDecisions(tMat, state
 
 
         % Store results in "optimal_decision_making" set
+        optimal_results(running,4) = reward_opt;
         optimal_results(running,3) = numSubsSelected;
         optimal_results(running,2) = Optimal_collision;
         optimal_results(running,1) = running;
     end
     
+    rewardOptimal      = mean(optimal_results(:,4));
     numSubsSelected    = mean(optimal_results(:,3)); 
     average_collisions = mean(optimal_results(:,2)); 
 end

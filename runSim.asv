@@ -17,8 +17,8 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter = 600;
-avg_iters = 4;
+max_iter = 50;
+avg_iters = 1;
 
 % currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
 % continues linearly then it should take 96 hours to run the whole sim. 
@@ -71,10 +71,12 @@ for index = 1:max_iter
     
     running_SAA_collisions = 0;
     running_ML_collisions =  0; 
+    
     running_SAA_MO =         0;
     running_ML_MO =          0;
     running_optimal_collisions = 0;
     running_optimal_reward = 0;
+    running_optimal_subs   = 0;
     running_ML_reward  =     0;
     running_SAA_reward =     0;
     running_R_avg      =     0;
@@ -125,7 +127,7 @@ for index = 1:max_iter
     weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim);
     
     %% Run optimal decision making
-    [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
+%    [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
     
     storeResults(index,6) = optimal_collisions;
     numSubsSelected(index,5) = optimalSubsSelected;
@@ -145,7 +147,7 @@ for index = 1:max_iter
     % store Collisions ML
     storeResults(index,4) = AvgCollisionsML;
     
-    % Calculate Average subbands selected
+    % Calculate Average subbands selected TS
     numSubsSelected(index,3) = sum(SubsSelected)/length(SubsSelected);
     
     % Calculate Average Missed opportunities
@@ -163,56 +165,59 @@ for index = 1:max_iter
 
     
     %% Run SAA, calculate collisions & missed opportunities
-    start = states(1,:);
-    action = zeros(n,5);
-    action(1,:) = start;
-    collision = zeros(n,1);
-    collision(1) = sum(states(1,:));
-    
-    missedSAA = zeros(n,1);
-    rewardingSAA = 0;
-    for k = 2:n
-        optimal = [0,0,0,0,0];
-        
-        contigOpen = states(k-1,:);
-        contigOpen = not(contigOpen);
-        f = find(diff([false,contigOpen==1,false])~=0);
-        [m,ix] = max(f(2:2:end)-f(1:2:end-1));
-        runStart = f((2*ix)-1);   
-        longRun = m;  
-        runEnd = runStart+longRun-1;  
-        action(k,runStart:runEnd) = 1;
-        stack = states(k,:)+action(k,:);
-        collision(k) = sum(stack>1);
-        
-        [rewardSAA,notNeeded] = CalculateReward(action(k,:),states(k,:),dim);
-        rewardingSAA = rewardingSAA + rewardSAA;
-        
-        
-        % Missed opportunities SAA calculation
-        contigOpen2 = states(k,:);
-        contigOpen2 = not(contigOpen2);
-        f = find(diff([false,contigOpen2==1,false])~=0);
-        [m,ix] = max(f(2:2:end)-f(1:2:end-1));
-        runStart = f((2*ix)-1);   
-        longRun = m;  
-        runEnd = runStart+longRun-1;        
-        optimal(runStart:runEnd) = 1; % SAA next time step 
-        
-        A = action(k,:) + optimal;  % test current selection w current optimal
-        %disp(stack);
-        % if there is a missed opportunity 
-        % This includes all missed opportunities without considering
-        % collisions at that exact step
-        if sum(A(runStart:runEnd) == 2) < m
-            missedSAA(k) = sum(A(runStart:runEnd) == 1);
-        end
-        
-    end
-    
+    [rewardingSAA, action, missedSAA, ... 
+          average_collisions, OptimalSubsSelected, rewardOptimal] ...
+                    = RunSenseAvoid(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
+%     start = states(1,:);
+%     action = zeros(n,5);
+%     action(1,:) = start;
+%     collision = zeros(n,1);
+%     collision(1) = sum(states(1,:));
+%     
+%     missedSAA = zeros(n,1);
+%     rewardingSAA = 0;
+%     for k = 2:n
+%         optimal = [0,0,0,0,0];
+%         
+%         contigOpen = states(k-1,:);
+%         contigOpen = not(contigOpen);
+%         f = find(diff([false,contigOpen==1,false])~=0);
+%         [m,ix] = max(f(2:2:end)-f(1:2:end-1));
+%         runStart = f((2*ix)-1);   
+%         longRun = m;  
+%         runEnd = runStart+longRun-1;  
+%         action(k,runStart:runEnd) = 1;
+%         stack = states(k,:)+action(k,:);
+%         collision(k) = sum(stack>1);
+%         
+%         [rewardSAA,notNeeded] = CalculateReward(action(k,:),states(k,:),dim);
+%         rewardingSAA = rewardingSAA + rewardSAA;
+%         
+%         
+%         % Missed opportunities SAA calculation
+%         contigOpen2 = states(k,:);
+%         contigOpen2 = not(contigOpen2);
+%         f = find(diff([false,contigOpen2==1,false])~=0);
+%         [m,ix] = max(f(2:2:end)-f(1:2:end-1));
+%         runStart = f((2*ix)-1);   
+%         longRun = m;  
+%         runEnd = runStart+longRun-1;        
+%         optimal(runStart:runEnd) = 1; % SAA next time step 
+%         
+%         A = action(k,:) + optimal;  % test current selection w current optimal
+%         %disp(stack);
+%         % if there is a missed opportunity 
+%         % This includes all missed opportunities without considering
+%         % collisions at that exact step
+%         if sum(A(runStart:runEnd) == 2) < m
+%             missedSAA(k) = sum(A(runStart:runEnd) == 1);
+%         end
+%         
+%     end
+%     
     rewardingSAA = rewardingSAA/n;
     
-    % store average number of subbands selected 
+    % store average number of subbands selected SAA
     numSubsSelected(index,4) = sum(action, 'all')/length(action);
     
     % Calculate Average Missed opportunities

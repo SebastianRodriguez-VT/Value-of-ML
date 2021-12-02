@@ -17,8 +17,8 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter = 600;
-avg_iters = 4;
+max_iter = 50;
+avg_iters = 1;
 
 % currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
 % continues linearly then it should take 96 hours to run the whole sim. 
@@ -120,9 +120,12 @@ for index = 1:max_iter
     states = MakeStates(tMat, dim, valuesIntf);
     n = 400000;
     
+
+    %% Generate optimal weighted matrix to use in optimal decision making
+    weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim);
     
     %% Run optimal decision making
-    [optimal_collisions, optimalSubsSelected] = RunOptimalDecisions(tMat, states, n, valuesIntf, optimal_decisions);
+    [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
     
     storeResults(index,6) = optimal_collisions;
     numSubsSelected(index,5) = optimalSubsSelected;
@@ -133,7 +136,7 @@ for index = 1:max_iter
     CPI     = 128;       % Num pulses in 1 CPI
     nCPIs   = 40;        % Num CPIs to simulate
     tPulses = CPI*nCPIs; % Total radar pulses simulated
-    nSB     = 5;         % Number of sub-bands   
+    nSB     = dim;         % Number of sub-bands   
 
     
     [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,tPulses,states);    
@@ -206,6 +209,7 @@ for index = 1:max_iter
         end
         
     end
+    
     rewardingSAA = rewardingSAA/n;
     
     % store average number of subbands selected 

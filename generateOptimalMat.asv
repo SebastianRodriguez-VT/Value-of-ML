@@ -1,0 +1,22 @@
+function weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim)
+    
+
+    weightedOptimalMat = zeros([size(tMat,1) size(tMat,2)]);
+    
+    for i = 1:size(tMat,1)
+        for j = 1:size(tMat,2)
+            
+            % Pull the optimal decision and interferer
+            choice = optimal_decisions(j,:);
+            intfCh = valuesIntf(j,:);
+            
+            % Compute reward for that choice given that interferer
+            reward = CalculateReward(choice, intfCh, dim);
+            
+            
+            weightedOptimalMat(:,j) = tMat(:,j) * reward;  
+        end
+    end
+
+    
+end

@@ -17,7 +17,7 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter = 600;
+max_iter =  600;
 avg_iters = 4;
 
 % currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
@@ -71,12 +71,16 @@ for index = 1:max_iter
     
     running_SAA_collisions = 0;
     running_ML_collisions =  0; 
+    running_optimal_collisions = 0;
     running_SAA_MO =         0;
     running_ML_MO =          0;
-    running_optimal_collisions = 0;
-    running_optimal_reward = 0;
+    running_Opt_MO =         0;
+
+    
+    running_optimal_subs   = 0;
     running_ML_reward  =     0;
     running_SAA_reward =     0;
+    running_optimal_reward = 0;
     running_R_avg      =     0;
     running_H_avg      =     0;
     
@@ -116,6 +120,7 @@ for index = 1:max_iter
     workingRvalue           = storeResults(index,3);
     
     
+    
     %% Generate states
     states = MakeStates(tMat, dim, valuesIntf);
     n = 400000;
@@ -125,18 +130,16 @@ for index = 1:max_iter
     weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim);
     
     %% Run optimal decision making
-    [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
+%    [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
     
-    storeResults(index,6) = optimal_collisions;
-    numSubsSelected(index,5) = optimalSubsSelected;
-    AvgCollisionsOptimal = storeResults(index,6);
+    
 
  
     %% Run TS
     CPI     = 128;       % Num pulses in 1 CPI
     nCPIs   = 40;        % Num CPIs to simulate
     tPulses = CPI*nCPIs; % Total radar pulses simulated
-    nSB     = dim;         % Number of sub-bands   
+    nSB     = dim;       % Number of sub-bands   
 
     
     [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,tPulses,states);    
@@ -145,8 +148,8 @@ for index = 1:max_iter
     % store Collisions ML
     storeResults(index,4) = AvgCollisionsML;
     
-    % Calculate Average subbands selected
-    numSubsSelected(index,3) = sum(SubsSelected)/length(SubsSelected);
+    % Calculate Average subbands selected TS
+    numSubsSelected(index,3) = numSubsSelected(index,3) + sum(SubsSelected)/length(SubsSelected);
     
     % Calculate Average Missed opportunities
     AvgMissedOpportunitiesML = sum(missedO)/length(missedO);
@@ -154,79 +157,43 @@ for index = 1:max_iter
     
     
     % store rolling interferences
-    Intf_rolling(index,2)   = sum(tCols(1:length(tCols)/4))/1280;
-    Intf_rolling(index,3)   = sum(tCols(length(tCols)/4 + 1: length(tCols)/2 ))/1280;
-    Intf_rolling(index,4)   = sum(tCols(length(tCols)/2 + 1: (3 * length(tCols)/4)))/1280;
-    Intf_rolling(index,5)   = sum(tCols((3 * length(tCols)/4) + 1: length(tCols)))/1280;
+    Intf_rolling(index,2)   = Intf_rolling(index,2) + sum(tCols(1:length(tCols)/4))/1280;
+    Intf_rolling(index,3)   = Intf_rolling(index,3) + sum(tCols(length(tCols)/4 + 1: length(tCols)/2 ))/1280;
+    Intf_rolling(index,4)   = Intf_rolling(index,4) + sum(tCols(length(tCols)/2 + 1: (3 * length(tCols)/4)))/1280;
+    Intf_rolling(index,5)   = Intf_rolling(index,5) + sum(tCols((3 * length(tCols)/4) + 1: length(tCols)))/1280;
 
     
 
     
     %% Run SAA, calculate collisions & missed opportunities
-    start = states(1,:);
-    action = zeros(n,5);
-    action(1,:) = start;
-    collision = zeros(n,1);
-    collision(1) = sum(states(1,:));
-    
-    missedSAA = zeros(n,1);
-    rewardingSAA = 0;
-    for k = 2:n
-        optimal = [0,0,0,0,0];
-        
-        contigOpen = states(k-1,:);
-        contigOpen = not(contigOpen);
-        f = find(diff([false,contigOpen==1,false])~=0);
-        [m,ix] = max(f(2:2:end)-f(1:2:end-1));
-        runStart = f((2*ix)-1);   
-        longRun = m;  
-        runEnd = runStart+longRun-1;  
-        action(k,runStart:runEnd) = 1;
-        stack = states(k,:)+action(k,:);
-        collision(k) = sum(stack>1);
-        
-        [rewardSAA,notNeeded] = CalculateReward(action(k,:),states(k,:),dim);
-        rewardingSAA = rewardingSAA + rewardSAA;
-        
-        
-        % Missed opportunities SAA calculation
-        contigOpen2 = states(k,:);
-        contigOpen2 = not(contigOpen2);
-        f = find(diff([false,contigOpen2==1,false])~=0);
-        [m,ix] = max(f(2:2:end)-f(1:2:end-1));
-        runStart = f((2*ix)-1);   
-        longRun = m;  
-        runEnd = runStart+longRun-1;        
-        optimal(runStart:runEnd) = 1; % SAA next time step 
-        
-        A = action(k,:) + optimal;  % test current selection w current optimal
-        %disp(stack);
-        % if there is a missed opportunity 
-        % This includes all missed opportunities without considering
-        % collisions at that exact step
-        if sum(A(runStart:runEnd) == 2) < m
-            missedSAA(k) = sum(A(runStart:runEnd) == 1);
-        end
-        
-    end
-    
+    [rewardingSAA, action, missedSAA, ... 
+          average_opt_collisions, OptimalSubsSelected, rewardOptimal, collision] ...
+                    = RunSenseAvoid(weightedOptimalMat, states, n, valuesIntf, optimal_decisions, dim);
+
     rewardingSAA = rewardingSAA/n;
     
-    % store average number of subbands selected 
-    numSubsSelected(index,4) = sum(action, 'all')/length(action);
+    storeResults(index,6) = average_opt_collisions;
+    AvgCollisionsOptimal = storeResults(index,6);
+    
+    
+    % store average number of subbands selected SAA
+    numSubsSelected(index,4) = numSubsSelected(index,4) + sum(action, 'all')/length(action);
+    numSubsSelected(index,5) = numSubsSelected(index,5) + OptimalSubsSelected;
     
     % Calculate Average Missed opportunities
     AvgMissedOpportunitiesSAA = sum(missedSAA)/length(missedSAA);
     missedOpp(index,4) = AvgMissedOpportunitiesSAA;
     
-    Intf_rolling(index,6)   = sum(collision(1:length(collision)/4))/(n/4);
-    Intf_rolling(index,7)   = sum(collision(length(collision)/4 + 1: length(collision)/2 ))/(n/4);
-    Intf_rolling(index,8)   = sum(collision(length(collision)/2 + 1: (3 * length(collision)/4)))/(n/4);
-    Intf_rolling(index,9)   = sum(collision((3 * length(collision)/4) + 1: length(collision)))/(n/4);
+    Intf_rolling(index,6)   = Intf_rolling(index,6) + sum(collision(1:length(collision)/4))/(n/4);
+    Intf_rolling(index,7)   = Intf_rolling(index,7) + sum(collision(length(collision)/4 + 1: length(collision)/2 ))/(n/4);
+    Intf_rolling(index,8)   = Intf_rolling(index,8) + sum(collision(length(collision)/2 + 1: (3 * length(collision)/4)))/(n/4);
+    Intf_rolling(index,9)   = Intf_rolling(index,9) + sum(collision((3 * length(collision)/4) + 1: length(collision)))/(n/4);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Collisions SAA
     storeResults(index,5) = sum(collision)/n;
     AvgCollisionsSAA = storeResults(index,5);
-    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
     running_SAA_collisions = running_SAA_collisions + AvgCollisionsSAA;
@@ -259,6 +226,19 @@ for index = 1:max_iter
     storeAvgResults(index,8) = running_ML_reward/avg_iters;
     storeAvgResults(index,9) = running_optimal_reward/avg_iters;
     
+    
+    Intf_rolling(index,2)   = Intf_rolling(index,2)/avg_iters; 
+    Intf_rolling(index,3)   = Intf_rolling(index,3)/avg_iters;
+    Intf_rolling(index,4)   = Intf_rolling(index,4)/avg_iters; 
+    Intf_rolling(index,5)   = Intf_rolling(index,5)/avg_iters;
+    Intf_rolling(index,6)   = Intf_rolling(index,6)/avg_iters; 
+    Intf_rolling(index,7)   = Intf_rolling(index,7)/avg_iters;
+    Intf_rolling(index,8)   = Intf_rolling(index,8)/avg_iters;
+    Intf_rolling(index,9)   = Intf_rolling(index,9)/avg_iters;
+    
+    numSubsSelected(index,3) = numSubsSelected(index,3)/avg_iters;
+    numSubsSelected(index,4) = numSubsSelected(index,4)/avg_iters;
+    numSubsSelected(index,5) = numSubsSelected(index,5)/avg_iters;
     
     
     % increment sigma for our norm dist.
@@ -317,9 +297,6 @@ title('H-Value vs Reward ML vs SAA')
 xlabel('H') 
 ylabel('Avg. Reward') 
 legend({'SAA', 'ML','Optimal'},'Location','southeast')
-
-
-
 
 
 
