@@ -17,8 +17,8 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter =  600;
-avg_iters = 4;
+max_iter =  50;
+avg_iters = 1;
 
 % currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
 % continues linearly then it should take 96 hours to run the whole sim. 
@@ -142,14 +142,14 @@ for index = 1:max_iter
     nSB     = dim;       % Number of sub-bands   
 
     
-    [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,tPulses,states);    
+    [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,20000,states);    
     % Calculate Average collisions
     AvgCollisionsML = sum(tCols)/length(tCols);
     % store Collisions ML
     storeResults(index,4) = AvgCollisionsML;
     
     % Calculate Average subbands selected TS
-    numSubsSelected(index,3) = numSubsSelected(index,3) + sum(SubsSelected)/length(SubsSelected);
+    numSubsSelected(index,3) = numSubsSelected(index,3) + (sum(SubsSelected)/length(SubsSelected));
     
     % Calculate Average Missed opportunities
     AvgMissedOpportunitiesML = sum(missedO)/length(missedO);
@@ -173,7 +173,7 @@ for index = 1:max_iter
     rewardingSAA = rewardingSAA/n;
     
     storeResults(index,6) = average_opt_collisions;
-    AvgCollisionsOptimal = storeResults(index,6);
+    AvgCollisionsOptimal = average_opt_collisions;
     
     
     % store average number of subbands selected SAA
@@ -243,6 +243,9 @@ for index = 1:max_iter
     
     % increment sigma for our norm dist.
     sigma = sigma + (30/max_iter);
+    
+    disp("Progress")
+    disp(index/max_iter)
 end
 
 
@@ -474,6 +477,8 @@ plot(numSubsR,numSubsSAA, 'LineWidth', 1)
 hold on
 plot(numSubsR,numSubsOpt, 'LineWidth', 1)
 legend({'ML','SAA', 'Optimal'},'Location','northeast')
+xlabel('R') 
+ylabel('Avg. Subbands Selected')
 title('[R-value] Average subbands selected ML vs SAA')
 
 

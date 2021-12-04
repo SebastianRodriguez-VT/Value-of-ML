@@ -94,6 +94,8 @@ function [rewardingSAA, action, missedSAA, average_opt_collisions, OptimalSubsSe
         %action_mistakes(running,6:10) = predicted_interferer;
         % Observe the collisions and Missed opportunities
         % collisions
+        
+        [reward_opt,notNeeded] = CalculateReward(decision,actual_intf,dim);
         stack = actual_intf + decision;
 %         disp("current inf + decision");
 %         disp(stack);
