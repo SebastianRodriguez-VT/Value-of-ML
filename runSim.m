@@ -4,10 +4,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% TODO:
-%   Fix the optimal collisions, it's definitely not averaging properly.
-%   Add optimal to the average subband selection, this may show something
-%   Create a first run of the R,H -> MDP code
-%   Tell my girlfriend I love her
+%   Try to work out MDP code again
+%   Ask charlie about what his code is actually doing
+%   Verify my reward selection by running a 2 subband interferer case for optimal against ml/SAA
+%      See why the optimal decision has such high variance for collisions and subband select. when ml/SAA are very nice lines 
+%   Start coding channel selection vs radar detection/tracking
+%        function detection p_fa, p_d, SINR, BW = detection(action, decision, dim)
+%        function detection estRange, SINR, BW = tracking(action, decision,B/W, p_fa?, p_d?, dim)
+
 
 
 
@@ -17,10 +21,11 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter =  50;
-avg_iters = 1;
+max_iter =  600;
+avg_iters = 4;
 
-% currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
+%  * laptop * much slower than my desktop. Typically the whole sim runs in 9 hours on desktop
+% On laptop currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
 % continues linearly then it should take 96 hours to run the whole sim. 
 % Changing avg_iters = 4 should run the whole 600 (assuming runtime is linear) 
 % within 34 hours. Much more reasonable
