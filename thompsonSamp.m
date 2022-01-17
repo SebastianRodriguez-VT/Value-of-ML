@@ -136,7 +136,14 @@ for t = 1:n
      end
         
 end
+%% THIS IS FOR TEST CASE
+%allReward = reward;
+
+%% UNCOMMENT THIS FOR NORMAL RUN
 allReward =  allReward/n;
+
+
+
 % steps = 1:n;
 % plot(loss./steps)
 % xlabel('PRI $\#$')

@@ -35,7 +35,7 @@ function states = MakeStates(tMat, dim, values)
     %     [200, 400, 500, 600, 700, 800, 1000, 0,0,0, ...]
     
     
-    states(1,:) = de2bi(mod(action,32),5,'left-msb');
+    states(1,:) = de2bi(mod(action,(2^dim)),dim,'left-msb');
     
     
     

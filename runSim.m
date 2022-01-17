@@ -21,8 +21,8 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter =  600;
-avg_iters = 4;
+max_iter =  20;
+avg_iters = 1;
 
 %  * laptop * much slower than my desktop. Typically the whole sim runs in 9 hours on desktop
 % On laptop currently, I had this set to 10 and in 8 hours it ran 56 steps. If it
@@ -90,15 +90,24 @@ for index = 1:max_iter
     running_H_avg      =     0;
     
     
-    
-    for iters = 1:avg_iters 
     %% Generate tMat
     tMat = createTMat(sigma,tStates);
-
     %% Calculate average entropy
     % and store values
     testing = tMat;  % I just do this because I'm scared to change tMat
     totalEntropy = CalculateEntropy(testing);
+    %% Generate states
+    states = MakeStates(tMat, dim, valuesIntf);
+    n = 400000;
+    
+    %% Generate optimal weighted matrix to use in optimal decision making
+    weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim);
+
+    
+    for iters = 1:avg_iters 
+    
+
+
 
     % I need to clean this up, I don't need it saving all this over and
     % over, just 1 matrix with everything will suffice.
@@ -126,16 +135,11 @@ for index = 1:max_iter
     
     
     
-    %% Generate states
-    states = MakeStates(tMat, dim, valuesIntf);
-    n = 400000;
-    
 
-    %% Generate optimal weighted matrix to use in optimal decision making
-    weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim);
+
     
     %% Run optimal decision making
-%    [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
+%     [optimal_collisions, optimalSubsSelected, rewardOptimal] = RunOptimalDecisions(weightedOptimalMat, states, n, valuesIntf, optimal_decisions);
     
     
 
@@ -173,7 +177,7 @@ for index = 1:max_iter
     %% Run SAA, calculate collisions & missed opportunities
     [rewardingSAA, action, missedSAA, ... 
           average_opt_collisions, OptimalSubsSelected, rewardOptimal, collision] ...
-                    = RunSenseAvoid(weightedOptimalMat, states, n, valuesIntf, optimal_decisions, dim);
+                    = RunSenseAvoid(weightedOptimalMat, states, n, valuesIntf, optimal_decisions, dim, tMat);
 
     rewardingSAA = rewardingSAA/n;
     

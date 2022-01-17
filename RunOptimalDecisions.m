@@ -39,6 +39,7 @@ function [average_collisions, numSubsSelected, rewardOptimal] = RunOptimalDecisi
         
         % Choose the optimal state given that interference
         decision = optimal_decisions(index_prob,:);
+%         decision = optimal_decisions(index_prob,:);
 %         disp("Optimal Decision");
 %         disp(decision);
         

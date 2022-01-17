@@ -1,4 +1,4 @@
-function tMat = createTMat(sigma, tStates)
+function tMat = createTMat(sigma, tStates)%, offset)
 
     for i = 1:tStates
 
@@ -36,11 +36,17 @@ function tMat = createTMat(sigma, tStates)
             for z = 1:size(probabilities,2)
                 probabilities(3,z) = (probabilities(2,z)/sum2Norm) * probabilities(1,z);                
             end
-
+            % disp(probabilities)
             % Store the values in tMat
             for temp = 2:size(probabilities,2)
-                tMat(i,int8(probabilities(2,temp))) = probabilities(3,temp);
+                %value = mod(probabilities(2,temp)+offset,tStates+1);
+                value = mod(probabilities(2,temp),tStates+1);
+                if value == 0
+                    value = 1;
+                end
+                tMat(i,value) = probabilities(3,temp);
             end
             % now Transition Mat. is generated
     end
+    %disp(probabilities)
 end

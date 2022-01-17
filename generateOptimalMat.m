@@ -36,7 +36,7 @@ function weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIn
             T = valuesIntf(k,:);
             % Loop over possible inteference states
             for m=1:size(tMat,1)
-                I = optimal_decisions(m,:);
+                I = valuesIntf(m,:);
                 Nc = sum(and(T,I));             % Determine number of collisions
                 if Nc>0
                     R(k,m) = 0;                 % Compute reward function
@@ -45,19 +45,19 @@ function weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIn
                     if Nmo == 0 
                         R(k,m) = 1;             % Compute reward function
                     else
-                        R(k,m) = 5/(6*Nmo);   % Compute reward function
+                        %R(k,m) = 5/(6*Nmo);   % Compute reward function
+                        R(k,m)  = 1 - (.1*Nmo);
                     end
                 end
             end
         end
         
-    avgRewardValue =  mean(R,2);   
+    %avgRewardValue =  mean(R,2);   
     
-    for i = 1:size(tMat,1)
-        for j = 1:size(tMat,1)
-            weightedOptimalMat(i,j) = tMat(i,j) * avgRewardValue(i);
-        end
-    end
+     for i = 1:size(tMat,1)
+         state_prob = tMat(i,:)';
+         weightedOptimalMat(i,:) = (R*state_prob)';
+     end
     
         
     %% ORIGINAL
