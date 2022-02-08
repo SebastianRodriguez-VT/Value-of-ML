@@ -69,9 +69,8 @@ function [rewardingSAA, action, missedSAA, average_opt_collisions, OptimalSubsSe
         % Find the highest number (probability) and its index in that row
         % This represents the highest likelihood that the interferer will
         % occur in the next time step
-        [max_prob, index_prob] = max(tMat(previous_intf,:));
-        
-%         [reward_opt, index_prob] = max(weightedOptimalMat(previous_intf,:));
+%         [max_prob, index_prob] = max(tMat(previous_intf,:));
+        [max_prob, index_prob] = max(weightedOptimalMat(previous_intf,:));
 
         
         

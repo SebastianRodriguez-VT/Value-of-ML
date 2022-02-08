@@ -50,7 +50,7 @@ function states = MakeStates(tMat, dim, values)
         if currentVal < transitions(action,1)
                 action = 1;
         else
-            for j = 1:size(transitions,2)
+            for j = 1:size(transitions,2)%-1%%%%%%%%%%% DELETE THIS 1 LATER
                 if currentVal >= transitions(action,j) && currentVal < transitions(action,j+1)
                     action = j+1;
                     break

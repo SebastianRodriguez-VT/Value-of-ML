@@ -8,8 +8,33 @@ function weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIn
 
  
 %     % Loop over possible actions
-%         for k=1:size(tMat,1)  % Skip action that corresponds to no transmission (assumes radar must pick at least one subband for transmission)
-%             T = optimal_decisions(k,:);
+        for k=1:size(tMat,1)  % Skip action that corresponds to no transmission (assumes radar must pick at least one subband for transmission)
+            T = valuesIntf(k,:);
+            % Loop over possible inteference states
+            for m=1:size(tMat,1)
+                I = optimal_decisions(m,:);
+                Nc = sum(and(T,I));             % Determine number of collisions
+                R(k,m) = CalculateReward(T,I,dim);
+%                 if Nc>0
+%                     R(k,m) = 0;                 % Compute reward function
+%                 else
+%                     Nmo = sum(not(or(T,I)));    % Determine number of missed opportunities
+%                     if Nmo == 0 
+%                         R(k,m) = 1;             % Compute reward function
+%                     else
+%                         R(k,m) = 1 - (.1*Nmo);   % Compute reward function
+%                     end
+%                 end
+            end
+        end
+%         
+
+%--------------------------------------------------------------------------
+% Value each action based on seen interference and multiply thru
+%--------------------------------------------------------------------------
+        % Loop over possible actions
+%         for k=2:size(tMat,1)  % Skip action that corresponds to no transmission (assumes radar must pick at least one subband for transmission)
+%             T = valuesIntf(k,:);
 %             % Loop over possible inteference states
 %             for m=1:size(tMat,1)
 %                 I = valuesIntf(m,:);
@@ -21,44 +46,25 @@ function weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIn
 %                     if Nmo == 0 
 %                         R(k,m) = 1;             % Compute reward function
 %                     else
-%                         R(k,m) = 5/(6*Nmo);   % Compute reward function
+%                         %R(k,m) = 5/(6*Nmo);   % Compute reward function
+%                         R(k,m)  = 1 - (.1*Nmo);
 %                     end
 %                 end
 %             end
 %         end
-%         
-
-%--------------------------------------------------------------------------
-% Value each action based on seen interference and multiply thru
-%--------------------------------------------------------------------------
-        % Loop over possible actions
-        for k=1:size(tMat,1)  % Skip action that corresponds to no transmission (assumes radar must pick at least one subband for transmission)
-            T = valuesIntf(k,:);
-            % Loop over possible inteference states
-            for m=1:size(tMat,1)
-                I = valuesIntf(m,:);
-                Nc = sum(and(T,I));             % Determine number of collisions
-                if Nc>0
-                    R(k,m) = 0;                 % Compute reward function
-                else
-                    Nmo = sum(not(or(T,I)));    % Determine number of missed opportunities
-                    if Nmo == 0 
-                        R(k,m) = 1;             % Compute reward function
-                    else
-                        %R(k,m) = 5/(6*Nmo);   % Compute reward function
-                        R(k,m)  = 1 - (.1*Nmo);
-                    end
-                end
-            end
-        end
         
     %avgRewardValue =  mean(R,2);   
     
-     for i = 1:size(tMat,1)
-         state_prob = tMat(i,:)';
-         weightedOptimalMat(i,:) = (R*state_prob)';
-     end
-    
+%      for i = 1:size(tMat,1)
+%          state_prob = tMat(i,:)';
+%          weightedOptimalMat(i,:) = (R(i,:)'*state_prob)';
+%      end
+    for i = 1:size(tMat,1)
+        for k = 1:size(tMat,1)
+           weightedOptimalMat(i,k) = R(i,k)*tMat(i,k);         
+        end
+        
+    end
         
     %% ORIGINAL
     %weightedOptimalMat = R * tMat;

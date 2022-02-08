@@ -54,8 +54,8 @@ sigma  = 0.10 ;
 offset = 3;
 
 tMat = zeros(tStates);
-tMat =  createTMat(sigma,tStates,0);
-tMatOffset = createTMat(sigma,tStates,offset);
+tMat =  createTMat(sigma,tStates);%,0);
+tMatOffset = createTMat(sigma,tStates);%,offset);
 
 %% Change this to whatever we're working with
 MatInUse = tMatOffset;

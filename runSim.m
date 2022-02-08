@@ -21,7 +21,7 @@
 % it will also affect the R value, increase max_iter, lowers R
 % Typically I keep it around 100 and this runs for about 15 minutes
 % R will always starts at 1 now
-max_iter =  20;
+max_iter = 100;
 avg_iters = 1;
 
 %  * laptop * much slower than my desktop. Typically the whole sim runs in 9 hours on desktop
@@ -90,8 +90,26 @@ for index = 1:max_iter
     running_H_avg      =     0;
     
     
+
+    
+    for iters = 1:avg_iters 
     %% Generate tMat
     tMat = createTMat(sigma,tStates);
+    
+    
+%     for i = (dimmX/2)+1:dimmX
+%         for j = 1:dimmY
+%             tMat(i,j) = 0;
+%         end
+%     end
+%     for i = 1:dimmX/2
+%         for j = 1:dimmY/2
+%             tMat(i,j) = tMat(i,j) + tMat(i,j+(dimmY/2));
+%             tMat(i,j+(dimmY/2)) = 0;
+%         end
+%     end
+    
+    
     %% Calculate average entropy
     % and store values
     testing = tMat;  % I just do this because I'm scared to change tMat
@@ -103,9 +121,6 @@ for index = 1:max_iter
     %% Generate optimal weighted matrix to use in optimal decision making
     weightedOptimalMat = generateOptimalMat(tMat,optimal_decisions,valuesIntf,dim);
 
-    
-    for iters = 1:avg_iters 
-    
 
 
 
@@ -151,7 +166,7 @@ for index = 1:max_iter
     nSB     = dim;       % Number of sub-bands   
 
     
-    [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,20000,states);    
+    [t_CPI,tCols,missedO,SubsSelected, allMLreward] = thompsonSamp(nSB,400000,states);    
     % Calculate Average collisions
     AvgCollisionsML = sum(tCols)/length(tCols);
     % store Collisions ML
@@ -172,13 +187,15 @@ for index = 1:max_iter
     Intf_rolling(index,5)   = Intf_rolling(index,5) + sum(tCols((3 * length(tCols)/4) + 1: length(tCols)))/1280;
 
     
-
+    %%%%%% Set the 8 to 1 to get the normal 400,000
+    shorten = length(states)/400;
     
     %% Run SAA, calculate collisions & missed opportunities
     [rewardingSAA, action, missedSAA, ... 
           average_opt_collisions, OptimalSubsSelected, rewardOptimal, collision] ...
-                    = RunSenseAvoid(weightedOptimalMat, states, n, valuesIntf, optimal_decisions, dim, tMat);
-
+                    = RunSenseAvoid(weightedOptimalMat, states(1:shorten,:), shorten, valuesIntf, optimal_decisions, dim, tMat);
+    n = shorten;
+    
     rewardingSAA = rewardingSAA/n;
     
     storeResults(index,6) = average_opt_collisions;
@@ -275,6 +292,7 @@ title('R-Value vs Collisions ML vs SAA')
 xlabel('R') 
 ylabel('Avg. Collisions') 
 legend({'SAA', 'ML','Optimal'},'Location','northeast')
+grid on
 %H Collisions
 figure % fig 2 
 plot(average_sorted_H(:,2),average_sorted_H(:,4), 'LineWidth', 1)
@@ -286,6 +304,7 @@ title('H-Value vs Collisions ML vs SAA')
 xlabel('H') 
 ylabel('Avg. Collisions') 
 legend({'SAA', 'ML','Optimal'},'Location','southeast')
+grid on
 
 %R Reward
 figure % fig 3 
@@ -298,6 +317,7 @@ title('R-Value vs Reward ML vs SAA')
 xlabel('R') 
 ylabel('Avg. Reward') 
 legend({'SAA', 'ML','Optimal'},'Location','northeast')
+grid on
 %H Reward
 figure % fig 4 
 plot(average_sorted_H(:,2),average_sorted_H(:,7), 'LineWidth', 1)
@@ -309,6 +329,7 @@ title('H-Value vs Reward ML vs SAA')
 xlabel('H') 
 ylabel('Avg. Reward') 
 legend({'SAA', 'ML','Optimal'},'Location','southeast')
+grid on
 
 
 
@@ -381,6 +402,7 @@ title('R-Value vs 0% - 50% Collisions ML vs SAA')
 xlabel('R') 
 ylabel('Avg. Collisions') 
 legend({'ML25%', 'ML50%','SAA25%', 'SAA50%'},'Location','southeast')
+grid on
 
 figure % fig 6 
 plot(collR,collML75_R, 'LineWidth', 1)
@@ -394,6 +416,7 @@ title('R-Value vs 50% - 100% Collisions ML & SAA')
 xlabel('R') 
 ylabel('Avg. Collisions') 
 legend({'ML75%', 'ML100%','SAA75%', 'SAA100%'},'Location','southeast')
+grid on
 
 %H
 figure % fig 7
@@ -406,6 +429,7 @@ hold on
 plot(collH,collSAA50_H, 'LineWidth', 1)
 title('Entropy Value vs 0% - 50% Collisions ML vs SAA')
 legend({'ML25%', 'ML50%','SAA25%', 'SAA50%'},'Location','southeast')
+grid on
 
 figure % fig 8
 plot(collH,collML75_H, 'LineWidth', 1)
@@ -417,6 +441,7 @@ hold on
 plot(collH,collSAA100_H, 'LineWidth', 1)
 title('Entropy Value vs 50% - 100% Collisions ML & SAA')
 legend({'ML75%', 'ML100%','SAA75%', 'SAA100%'},'Location','southeast')
+grid on
 
 
 
@@ -435,6 +460,7 @@ legend({'ML','SAA', 'Optimal'},'Location','northeast')
 xlabel('R') 
 ylabel('Avg. Collisions') 
 title('[R-Value] Average Collisions ML vs SAA vs Optimal')
+grid on
 % H
 figure % fig 10
 plot(H,mlH3,  'LineWidth', 1)
@@ -446,6 +472,7 @@ legend({'ML','SAA', 'Optimal'},'Location','northeast')
 xlabel('H') 
 ylabel('Avg. Collisions') 
 title('[Entropy] Average Collisions ML vs SAA')
+grid on
 
 
 
@@ -460,6 +487,7 @@ legend({'ML','SAA'},'Location','southeast')
 xlabel('R') 
 ylabel('Avg. Missed Opportunities') 
 title('[R-Value] Missed Opportunities ML vs SAA')
+grid on
 % H
 figure % fig 12
 plot(missH,missML_H,  'LineWidth', 1)
@@ -469,6 +497,7 @@ legend({'ML','SAA'},'Location','southeast')
 xlabel('H') 
 ylabel('Avg. Missed Opportunities') 
 title('[Entropy] Missed Opportunities ML vs SAA')
+grid on
 
 
 
@@ -489,6 +518,7 @@ legend({'ML','SAA', 'Optimal'},'Location','northeast')
 xlabel('R') 
 ylabel('Avg. Subbands Selected')
 title('[R-value] Average subbands selected ML vs SAA')
+grid on
 
 
 

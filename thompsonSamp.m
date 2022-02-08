@@ -51,7 +51,7 @@ Sn = bi2de(flip(intf(1,:)))+1;
 
 count = 1;
 
-for t = 1:n
+for t = 1:(n-1)
     %target_range(t+1)  = Vr*PRI(t+1)*t+Ro+cn(t+1);
     theta = mvnrnd(mu,inv(B));
     %Calculate posterior index for each arm
